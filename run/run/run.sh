@@ -1,4 +1,5 @@
 #!/bin/bash
+set -x 
 benchmark="mnist"
 framework="pytorch"
 gpus=1
