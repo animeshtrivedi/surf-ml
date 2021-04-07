@@ -1,4 +1,5 @@
 #!/bin/bash
+set -x 
 sbatch << EOT
 #!/bin/bash
 #SBATCH -J allperf
@@ -9,7 +10,7 @@ sbatch << EOT
 #SBATCH -c $5
 #SBATCH -o $8
 #SBATCH -e $8
-#SBATCH --gres=gpu:$3
+#; SBATCH --gres=gpu:$3
 
 ###################################################################################################
 # Option                        | Values                             | #SBATCH only | Export only |
