@@ -71,7 +71,9 @@ fi
 export CORES_GPU=$5
 export EPOCHS=3
 export LOGINTER=${10}
-export DATADIR="${TMPDIR}"
+#export DATADIR="${TMPDIR}"
+#export DATADIR="~/dnn-benchmark-suite/benchmark/mnist"
+export DATADIR="~/dnn-benchmark-suite/benchmark/cifar10"
 
 #--------------------------------------------------------------------------------------
 # Get jobs to nodes / gpus maps
@@ -142,11 +144,11 @@ if contains "\$framework" "pytorch" || contains "\$framework" "horovod" || conta
 
         if contains "\$benchmark" "mnist"; then
             echo "Copy real mnist data"
-            mpirun -N 1 -H \$harr1 tar zxf ~/benchmark/mnist/MNIST.tar.gz
+            #mpirun -N 1 -H \$harr1 tar zxf ~/benchmark/mnist/MNIST.tar.gz
         fi
         if contains "\$benchmark" "cifar10"; then
             echo "Copy real cifar10 data"
-            mpirun -N 1 -H \$harr1 tar zxf ~/benchmark/cifar10/cifar-10-python.tar.gz
+            #mpirun -N 1 -H \$harr1 tar zxf ~/benchmark/cifar10/cifar-10-python.tar.gz
         fi
         if contains "\$benchmark" "imagenet"; then
             # Use MPIcopy here as the other two data sets are very small (~70mb) while this one is ~150gb    
