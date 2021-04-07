@@ -95,19 +95,19 @@ mkdir -p .envs
 if contains "\$framework" "pytorch" || contains "\$framework" "horovod" || contains "\$framework" "gpipe"; then
     module purge
     module use ~/environment-modules-lisa
-    module load 2019
-    module load Python/3.6.6-foss-2019b
+    module load 2020
+    module load Python/3.8.2-GCCcore-9.3.0
 
-    module unload GCC
-    module unload GCCcore
-    module unload binutils
-    module unload zlib
-    module unload compilerwrappers
+#    module unload GCC
+ #   module unload GCCcore
+  #  module unload binutils
+   # module unload zlib
+    #module unload compilerwrappers
 
-    module load NCCL/2.5.6-CUDA-10.1.243
-    module load cuDNN/7.6.5.32-CUDA-10.1.243
-    module load OpenMPI/3.1.4-GCC-8.3.0
-    module load libyaml/0.2.1-GCCcore-8.3.0
+#    module load NCCL/2.5.6-CUDA-10.1.243
+ #   module load cuDNN/7.6.5.32-CUDA-10.1.243
+  #  module load OpenMPI/3.1.4-GCC-8.3.0
+#    module load libyaml/0.2.1-GCCcore-8.3.0
 
     export MPICC=mpicc
     export MPICXX=mpicxx
