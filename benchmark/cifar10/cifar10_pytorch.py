@@ -49,7 +49,7 @@ def train(args, model, device, train_loader, test_loader):
 
 
 def train_epoch(epoch, args, model, device, train_loader, optimizer, test_loader):
-    torch.cuda.synchronize(device)
+    #torch.cuda.synchronize(device)
     tick = time.time()
     steps = len(train_loader)
     data_trained = 0
@@ -73,20 +73,21 @@ def train_epoch(epoch, args, model, device, train_loader, optimizer, test_loader
             throughput = data_trained / (time.time()-tick)
             
             dev = torch.cuda.current_device()
-            stats = torch.cuda.memory_stats(device=dev)
-            max_mem = torch.cuda.get_device_properties(dev).total_memory
-            print('train | %d/%d epoch (%d%%) | %.3f samples/sec (estimated) | mem (GB): %.3f (%.3f) / %.3f'
-                '' % (epoch+1, epochs, percent, throughput, 
-                      stats["allocated_bytes.all.peak"] / 10**9,
-                      stats["reserved_bytes.all.peak"] / 10**9,
-                      float(max_mem) / 10**9))
+#            stats = torch.cuda.memory_stats(device=dev)
+#            max_mem = torch.cuda.get_device_properties(dev).total_memory
+#            print('train | %d/%d epoch (%d%%) | %.3f samples/sec (estimated) | mem (GB): %.3f (%.3f) / %.3f'
+#                '' % (epoch+1, epochs, percent, throughput, 
+#                      stats["allocated_bytes.all.peak"] / 10**9,
+#                      stats["reserved_bytes.all.peak"] / 10**9,
+#                      float(max_mem) / 10**9))
+            print("working...")
     
-    torch.cuda.synchronize(device)
+#    torch.cuda.synchronize(device)
     tock = time.time()
 
     train_loss = loss_sum.item() / data_trained
     valid_loss, valid_accuracy = test_epoch(model, device, test_loader)
-    torch.cuda.synchronize(device)
+#    torch.cuda.synchronize(device)
 
     elapsed_time = tock - tick
     throughput = data_trained / elapsed_time
@@ -148,7 +149,7 @@ def main():
                         help="Use synthetic data")
     args = parser.parse_args()
 
-    device = torch.device("cuda")
+    device = torch.device("cpu")
     dataloader_kwargs = {'pin_memory': True}
 
     torch.manual_seed(1)
