@@ -1,5 +1,5 @@
 #!/bin/bash
-set -x 
+set -x
 sbatch << EOT
 #!/bin/bash
 #SBATCH -J allperf
@@ -50,7 +50,7 @@ fi
 framework=$2
 if [ "$2" == "all" ]; then
     framework="pytorch horovod gpipe pipedream"
-    
+
     # Not wasting multi-node run on pytorch (single gpu) and gpipe (single node, multi gpu)
     if [ "$4" -gt "1" ]; then
         echo "multi-node only supports horovod and pipedream"
@@ -72,8 +72,8 @@ export CORES_GPU=$5
 export EPOCHS=3
 export LOGINTER=${10}
 #export DATADIR="${TMPDIR}"
-#export DATADIR="~/dnn-benchmark-suite/benchmark/mnist"
-export DATADIR="~/dnn-benchmark-suite/benchmark/cifar10"
+#export DATADIR="$PROJECTDIR/benchmark/mnist"
+export DATADIR="$PROJECTDIR/benchmark/cifar10"
 
 #--------------------------------------------------------------------------------------
 # Get jobs to nodes / gpus maps
@@ -123,7 +123,7 @@ if contains "\$framework" "pytorch" || contains "\$framework" "horovod" || conta
     pip3 install torch==1.5.0+cu101 torchvision==0.6.0+cu101 -f https://download.pytorch.org/whl/torch_stable.html
 
     # Install misc python packages
-    cd ~/dnn-benchmark-suite/run
+    cd $PROJECTDIR/run
     pip3 install -r requirements.txt
     cd ~
 
@@ -132,9 +132,9 @@ if contains "\$framework" "pytorch" || contains "\$framework" "horovod" || conta
         # Generate synthetic data once
         echo "Generate synthetic data"
         if [ $4 -gt 1 ]; then
-            mpirun -N 1 -H \$harr1 python3 ~/dnn-benchmark-suite/benchmark/generate_synthetic_data.py \$benchmark
+            mpirun -N 1 -H \$harr1 python3 $PROJECTDIR/benchmark/generate_synthetic_data.py \$benchmark
         else
-            python3 ~/dnn-benchmark-suite/benchmark/generate_synthetic_data.py \$benchmark
+            python3 $PROJECTDIR/benchmark/generate_synthetic_data.py \$benchmark
         fi
 
         synth=0
@@ -151,7 +151,7 @@ if contains "\$framework" "pytorch" || contains "\$framework" "horovod" || conta
             #mpirun -N 1 -H \$harr1 tar zxf ~/benchmark/cifar10/cifar-10-python.tar.gz
         fi
         if contains "\$benchmark" "imagenet"; then
-            # Use MPIcopy here as the other two data sets are very small (~70mb) while this one is ~150gb    
+            # Use MPIcopy here as the other two data sets are very small (~70mb) while this one is ~150gb
             module load mpicopy
 
             echo "Copying imagenet, this will take some time: $(date +'%T')"
@@ -180,7 +180,7 @@ if contains "\$framework" "pytorch" || contains "\$framework" "horovod" || conta
     fi
 fi
 
-cd ~/dnn-benchmark-suite
+cd $PROJECTDIR
 
 #--------------------------------------------------------------------------------------
 if contains "\$framework" "pytorch"; then
@@ -284,18 +284,18 @@ if contains "\$framework" "pipedream"; then
     source ~/.envs/env_recdistr_pipedream/bin/activate
 
     echo "Install pipedream"
-    pip3 install ~/dnn-benchmark-suite/torch_pipedream/pytorch/dist/torch-1.1.0a0+828a6a3-cp37-cp37m-linux_x86_64.whl
+    pip3 install $PROJECTDIR/torch_pipedream/pytorch/dist/torch-1.1.0a0+828a6a3-cp37-cp37m-linux_x86_64.whl
     pip3 install torchvision==0.2.1
 
-    cd ~/dnn-benchmark-suite/pipedream-fork
+    cd $PROJECTDIR/pipedream-fork
     pip3 install -r requirements.txt
     cd ~
 
     #--------------------------------------------------------------------------------------
     # Create symlinks to models if not already there
-    model_cifar10="${HOME}/dnn-benchmark-suite/benchmark/cifar10/pytorchcifargitmodels"
-    model_mnist="${HOME}/dnn-benchmark-suite/benchmark/mnist/models"
-    model_target="${HOME}/dnn-benchmark-suite/pipedream-fork/profiler/image_classification/models"
+    model_cifar10="$PROJECTDIR/benchmark/cifar10/pytorchcifargitmodels"
+    model_mnist="$PROJECTDIR/benchmark/mnist/models"
+    model_target="$PROJECTDIR/pipedream-fork/profiler/image_classification/models"
 
     if [ ! -f "\${model_target}/mnistresnet.py" ]; then
         ln -s "\${model_mnist}/mnistresnet.py" "\${model_target}/mnistresnet.py"
@@ -316,12 +316,12 @@ if contains "\$framework" "pipedream"; then
         ln -s "\${model_cifar10}/mobilenetv2.py" "\${model_target}/cifarmobilenetv2.py"
     fi
 
-    cd ~/dnn-benchmark-suite/run
+    cd $PORJECTDIR/run
     pip3 install -r requirements.txt
     cd ~
 
     pip3 install Pillow==6.1
-    
+
     #--------------------------------------------------------------------------------------
     # Only do this if not already copied
     # Is repeated here as the script uses a different pytorch version
@@ -329,7 +329,7 @@ if contains "\$framework" "pipedream"; then
         if ${11}; then
             # Generate synthetic data once
             echo "Generate synthetic data"
-            mpirun -N 1 -H \$harr1 python3 ~/dnn-benchmark-suite/benchmark/generate_synthetic_data.py \$benchmark
+            mpirun -N 1 -H \$harr1 python3 $POJECTDIR/benchmark/generate_synthetic_data.py \$benchmark
             synth=0
         else
             # Copy the real data
@@ -344,7 +344,7 @@ if contains "\$framework" "pipedream"; then
                 mpirun -N 1 -H \$harr1 tar zxf ~/benchmark/cifar10/cifar-10-python.tar.gz
             fi
             if contains "\$benchmark" "imagenet"; then
-                # Use MPIcopy here as the other two data sets are very small (~70mb) while this one is ~150gb    
+                # Use MPIcopy here as the other two data sets are very small (~70mb) while this one is ~150gb
                 module load mpicopy
 
                 echo "Copying imagenet, this will take some time: $(date +'%T')"
@@ -399,7 +399,7 @@ if contains "\$framework" "pipedream"; then
             #----------------------------------------------------------------
             # Run graph profiler
             # Note: You can add learning rate / momentum etc to this
-            cd ~/dnn-benchmark-suite/pipedream-fork/profiler/image_classification
+            cd $PROJECTDIR/pipedream-fork/profiler/image_classification
             echo "Start profiler"
             CUDA_VISIBLE_DEVICES=0 python3 main.py          \
                                     -a \$mname              \
@@ -432,7 +432,7 @@ if contains "\$framework" "pipedream"; then
             fi
 
             #----------------------------------------------------------------
-            cd ~/dnn-benchmark-suite/pipedream-fork/optimizer
+            cd $PROJECTDIR/pipedream-fork/optimizer
             capture=0
             multi=()
             replications=()
@@ -541,7 +541,7 @@ if contains "\$framework" "pipedream"; then
             count=0
             for h in "\${hosts[@]}"; do
                 echo "launch host \${h}"
-                ssh \$h "~/dnn-benchmark-suite/run/run/pipedream_run.sh \
+                ssh \$h "$PROJECTDIR/run/run/pipedream_run.sh \
                     -m \${hosts[0]}    \
                     -n \$mname         \
                     -t \$totalgpu      \
@@ -568,5 +568,3 @@ if contains "\$framework" "pipedream"; then
 fi
 
 EOT
-
-

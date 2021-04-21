@@ -1,5 +1,5 @@
 #!/bin/bash
-set -x 
+set -x
 benchmark="mnist"
 framework="pytorch"
 gpus=1
@@ -47,6 +47,9 @@ while getopts "b:f:g:n:p:m:q:sh" arg; do
     esac
 done
 
+# Export the project directory by parsing the full path to this script when running
+export PROJECTDIR=$(echo $PWD${0:1} | sed -ne "s/\/run\/run\/run.sh//p")
+
 # ---------------------------------------------------------------------------------------------------------------
 # Change user parameters based on special cases
 if [[ "$nodes" -gt "1" && ("$framework" == "pytorch" || "$framework" == "gpipe") ]]; then
@@ -77,10 +80,10 @@ fi
 
 # ---------------------------------------------------------------------------------------------------------------
 # Create output files
-cd ~/dnn-benchmark-suite
+cd $PROJECTDIR
 mkdir -p out
 date=`date +%Y-%m-%d_%H-%M-%S`
-dir="${HOME}/dnn-benchmark-suite/out/${date}"
+dir="$PROJECTDIR/out/${date}"
 mkdir $dir
 
 info="${dir}/info.txt"
@@ -97,7 +100,7 @@ echo -e "Queue          $queue"         >> "$info"
 echo -e "Use synthetic  $synthetic"     >> "$info"
 
 # ---------------------------------------------------------------------------------------------------------------
-cd ~/dnn-benchmark-suite/run/run
+cd $PROJECTDIR/run/run
 
 ./run_template.sh $benchmark $framework $gpus $nodes $cpus_per_gpu $modelname \
                   $queue_time $output_file $queue                             \
