@@ -72,9 +72,15 @@ export CORES_GPU=$5
 export EPOCHS=3
 export LOGINTER=${10}
 #export DATADIR="${TMPDIR}"
-#export DATADIR="$PROJECTDIR/benchmark/mnist"
-export DATADIR="$PROJECTDIR/benchmark/cifar10"
 
+case $1 in
+    "cifar10")
+        export DATADIR="$PROJECTDIR/benchmark/cifar10"
+        ;;
+    *)
+        export DATADIR="$PROJECTDIR/benchmark/mnist"
+        ;;
+esac
 #--------------------------------------------------------------------------------------
 # Get jobs to nodes / gpus maps
 scontrol show hostnames $SLURM_JOB_NODELIST > hostfile
@@ -96,7 +102,7 @@ mkdir -p .envs
 
 if contains "\$framework" "pytorch" || contains "\$framework" "horovod" || contains "\$framework" "gpipe"; then
     module purge
-    module use ~/environment-modules-lisa
+#   module use ~/environment-modules-lisa
     module load 2020
     module load Python/3.8.2-GCCcore-9.3.0
 
