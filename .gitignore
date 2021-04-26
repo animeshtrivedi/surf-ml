@@ -1,2 +1,5 @@
-out/*
+out/
 __pycache__/
+benchmark/cifar10/cifar-10-batches-py/
+*.tar.gz
+benchmark/mnist/MNIST/
