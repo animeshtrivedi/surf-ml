@@ -31,7 +31,8 @@ model_names = {
 datadir    = os.environ['DATADIR']
 epochs     = int(os.environ['EPOCHS'])
 batch_size = int(os.environ['BATCH_SIZE'])
-log_inter  = int(os.environ['LOGINTER']) cores_gpu  = int(os.environ['CORES_GPU'])
+log_inter  = int(os.environ['LOGINTER'])
+cores_gpu  = int(os.environ['CORES_GPU'])
 platform   = os.environ['PLATFORM']
 def train(args, model, device, train_loader, test_loader):
     optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
@@ -48,7 +49,7 @@ def train(args, model, device, train_loader, test_loader):
 
 
 def train_epoch(epoch, args, model, device, train_loader, optimizer, test_loader):
-    platform == "cuda" and torch.cuda.synchronize(deveice)
+    platform == "cuda" and torch.cuda.synchronize(device)
     tick = time.time()
     steps = len(train_loader)
     data_trained = 0
@@ -81,13 +82,13 @@ def train_epoch(epoch, args, model, device, train_loader, optimizer, test_loader
                         stats["reserved_bytes.all.peak"] / 10**9,
                         float(max_mem) / 10**9))
 
-    platform == "cuda" and torch.cuda.synchronize(deveice)
+    platform == "cuda" and torch.cuda.synchronize(device)
     tock = time.time()
 
     train_loss = loss_sum.item() / data_trained
     valid_loss, valid_accuracy = test_epoch(model, device, test_loader)
 
-    platform == "cuda" and torch.cuda.synchronize(deveice)
+    platform == "cuda" and torch.cuda.synchronize(device)
 
     elapsed_time = tock - tick
     throughput = data_trained / elapsed_time

@@ -34,6 +34,7 @@ epochs     = int(os.environ['EPOCHS'])
 batch_size = int(os.environ['BATCH_SIZE'])
 log_inter  = int(os.environ['LOGINTER'])
 cores_gpu  = int(os.environ['CORES_GPU'])
+platform   = os.environ['PLATFORM']
 
 parser = argparse.ArgumentParser(description='D-DNN imagenet benchmark')
 parser.add_argument('-a', '--arch', metavar='ARCH', default='resnet50',
@@ -48,7 +49,7 @@ parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
 parser.add_argument('--wd', '--weight-decay', default=1e-4, type=float,
                     metavar='W', help='weight decay (default: 1e-4)',
                     dest='weight_decay')
-# Value of args.synthetic_data may seem confusing, but those values 
+# Value of args.synthetic_data may seem confusing, but those values
 # come from bash and there 0=true and all else =false
 parser.add_argument('-s', '--synthetic_data', type=int, default=0,
                     help="Use synthetic data")
@@ -60,7 +61,7 @@ def main():
 
     # create model
     print("=> creating model '{}'".format(args.arch))
-    device = torch.device("cuda")
+    device = torch.device(platform)
     model = model_names[args.arch].cuda()
 
     cudnn.benchmark = True
@@ -94,17 +95,17 @@ def main():
         # Load synthetic data
         traindir = datadir + '/IMAGENET/train'
         valdir   = datadir + '/IMAGENET/val'
-    
+
     train_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(
             traindir,
-            transforms.Compose(train_comp)), 
+            transforms.Compose(train_comp)),
         batch_size=batch_size, shuffle=True,
         num_workers=cores_gpu, pin_memory=True)
 
     val_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(
-            valdir, 
+            valdir,
             transforms.Compose(val_comp)),
         batch_size=batch_size, shuffle=True,
         num_workers=cores_gpu, pin_memory=True)
@@ -134,12 +135,12 @@ def train(args, model, device, train_loader, test_loader):
 
         throughputs.append(throughput)
         elapsed_times.append(elapsed_time)
-    
+
     return throughputs, elapsed_times
 
 
 def train_epoch(epoch, args, model, device, train_loader, optimizer, test_loader):
-    torch.cuda.synchronize(device)
+    platform == "cuda" and torch.cuda.synchronize(device)
     tick = time.time()
     steps = len(train_loader)
     data_trained = 0
@@ -161,22 +162,22 @@ def train_epoch(epoch, args, model, device, train_loader, optimizer, test_loader
         if i % log_inter == 0:
             percent = i / steps * 100
             throughput = data_trained / (time.time()-tick)
-            
+
             dev = torch.cuda.current_device()
             stats = torch.cuda.memory_stats(device=dev)
             max_mem = torch.cuda.get_device_properties(dev).total_memory
             print('train | %d/%d epoch (%d%%) | %.3f samples/sec (estimated) | mem (GB): %.3f (%.3f) / %.3f'
-                '' % (epoch+1, epochs, percent, throughput, 
+                '' % (epoch+1, epochs, percent, throughput,
                       stats["allocated_bytes.all.peak"] / 10**9,
                       stats["reserved_bytes.all.peak"] / 10**9,
                       float(max_mem) / 10**9))
-    
-    torch.cuda.synchronize(device)
+
+    platform == "cuda" and torch.cuda.synchronize(device)
     tock = time.time()
 
     train_loss = loss_sum.item() / data_trained
     valid_loss, valid_accuracy = test_epoch(model, device, test_loader)
-    torch.cuda.synchronize(device)
+    platform == "cuda" and torch.cuda.synchronize(device)
 
     elapsed_time = tock - tick
     throughput = data_trained / elapsed_time
