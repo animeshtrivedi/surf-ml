@@ -50,7 +50,7 @@ def train(args, model, device, train_loader, test_loader):
 
 
 def train_epoch(epoch, args, model, device, train_loader, optimizer, test_loader):
-    torch.cuda.synchronize(device) if platform == "cuda" else pass
+    platform == "cuda" and torch.cuda.synchronize(device)
     tick = time.time()
     steps = len(train_loader)
     data_trained = 0
@@ -83,13 +83,13 @@ def train_epoch(epoch, args, model, device, train_loader, optimizer, test_loader
                         stats["reserved_bytes.all.peak"] / 10**9,
                         float(max_mem) / 10**9))
 
-    torch.cuda.synchronize(device) if platform == "cuda" else pass
+    platform == "cuda" and torch.cuda.synchronize(device)
     tock = time.time()
 
     train_loss = loss_sum.item() / data_trained
     valid_loss, valid_accuracy = test_epoch(model, device, test_loader)
 
-    torch.cuda.synchronize(device) if platform == "cuda" else pass
+    platform == "cuda" and torch.cuda.synchronize(device)
 
     elapsed_time = tock - tick
     throughput = data_trained / elapsed_time
