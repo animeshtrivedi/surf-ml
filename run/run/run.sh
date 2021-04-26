@@ -8,13 +8,14 @@ loginterval=25
 modelname="all"
 queue="gpu_short"
 synthetic=true
+PLATFORM="cpu"
 
 usage() {
     echo "$0 usage:" && grep " .)\ #" $0; exit 0;
 }
 [ $# -eq 0 ] && usage
 
-while getopts "b:f:g:n:p:m:q:sh" arg; do
+while getopts "b:f:g:n:p:m:q:t:sh" arg; do
     case $arg in
         b) # Benchmark: mnist, cifar10, imagenet, highres (synthetic only), all. Default: mnist
             benchmark=${OPTARG}
@@ -40,12 +41,17 @@ while getopts "b:f:g:n:p:m:q:sh" arg; do
         s) # Disable synthetic data generation, use real data (will take much longer)
             synthetic=false
             ;;
+        t) # Type of run (cpu or cuda)
+            PLATFORM=${OPTARG}
+            ;;
         h | *) # Display help.
             usage
             exit 0
             ;;
     esac
 done
+
+export PLATFORM
 
 # Export the project directory by parsing the full path to this script when running
 export PROJECTDIR=$(echo $PWD${0:1} | sed -ne "s/\/run\/run\/run.sh//p")
@@ -98,6 +104,7 @@ echo -e "Log interval   $loginterval"   >> "$info"
 echo -e "Model name     $modelname"     >> "$info"
 echo -e "Queue          $queue"         >> "$info"
 echo -e "Use synthetic  $synthetic"     >> "$info"
+echo -e "Platform Type  $PLATFORM"      >> "$info"
 
 # ---------------------------------------------------------------------------------------------------------------
 cd $PROJECTDIR/run/run

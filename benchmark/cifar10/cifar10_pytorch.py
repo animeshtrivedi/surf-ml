@@ -31,9 +31,8 @@ model_names = {
 datadir    = os.environ['DATADIR']
 epochs     = int(os.environ['EPOCHS'])
 batch_size = int(os.environ['BATCH_SIZE'])
-log_inter  = int(os.environ['LOGINTER'])
-cores_gpu  = int(os.environ['CORES_GPU'])
-
+log_inter  = int(os.environ['LOGINTER']) cores_gpu  = int(os.environ['CORES_GPU'])
+platform   = os.environ['PLATFORM']
 def train(args, model, device, train_loader, test_loader):
     optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
 
@@ -44,12 +43,12 @@ def train(args, model, device, train_loader, test_loader):
 
         throughputs.append(throughput)
         elapsed_times.append(elapsed_time)
-    
+
     return throughputs, elapsed_times
 
 
 def train_epoch(epoch, args, model, device, train_loader, optimizer, test_loader):
-    #torch.cuda.synchronize(device)
+    torch.cuda.synchronize(device) if platform == "cuda" else pass
     tick = time.time()
     steps = len(train_loader)
     data_trained = 0
@@ -71,23 +70,24 @@ def train_epoch(epoch, args, model, device, train_loader, optimizer, test_loader
         if i % log_inter == 0:
             percent = i / steps * 100
             throughput = data_trained / (time.time()-tick)
-            
+
             dev = torch.cuda.current_device()
-#            stats = torch.cuda.memory_stats(device=dev)
-#            max_mem = torch.cuda.get_device_properties(dev).total_memory
-#            print('train | %d/%d epoch (%d%%) | %.3f samples/sec (estimated) | mem (GB): %.3f (%.3f) / %.3f'
-#                '' % (epoch+1, epochs, percent, throughput, 
-#                      stats["allocated_bytes.all.peak"] / 10**9,
-#                      stats["reserved_bytes.all.peak"] / 10**9,
-#                      float(max_mem) / 10**9))
-            print("working...")
-    
-#    torch.cuda.synchronize(device)
+            if platform == "cuda":
+                stats = torch.cuda.memory_stats(device=dev)
+                max_mem = torch.cuda.get_device_properties(dev).total_memory
+                print('train | %d/%d epoch (%d%%) | %.3f samples/sec (estimated) | mem (GB): %.3f (%.3f) / %.3f'
+                    '' % (epoch+1, epochs, percent, throughput,
+                        stats["allocated_bytes.all.peak"] / 10**9,
+                        stats["reserved_bytes.all.peak"] / 10**9,
+                        float(max_mem) / 10**9))
+
+    torch.cuda.synchronize(device) if platform == "cuda" else pass
     tock = time.time()
 
     train_loss = loss_sum.item() / data_trained
     valid_loss, valid_accuracy = test_epoch(model, device, test_loader)
-#    torch.cuda.synchronize(device)
+
+    torch.cuda.synchronize(device) if platform == "cuda" else pass
 
     elapsed_time = tock - tick
     throughput = data_trained / elapsed_time
@@ -143,13 +143,13 @@ def main():
                         ' (default: resnet50)')
     parser.add_argument('--lr', type=float, default=0.1, metavar='LR',
                         help='learning rate (default: 0.1)')
-    # Value of args.synthetic_data may seem confusing, but those values 
+    # Value of args.synthetic_data may seem confusing, but those values
     # come from bash and there 0=true and all else =false
     parser.add_argument('-s', '--synthetic_data', type=int, default=0,
                         help="Use synthetic data")
     args = parser.parse_args()
 
-    device = torch.device("cpu")
+    device = torch.device(platform)
     dataloader_kwargs = {'pin_memory': True}
 
     torch.manual_seed(1)
@@ -161,7 +161,7 @@ def main():
     if args.synthetic_data:
         # Load normal data
         train_loader = torch.utils.data.DataLoader(
-            datasets.CIFAR10(datadir, train=True, download=False, 
+            datasets.CIFAR10(datadir, train=True, download=False,
                 transform=transforms.Compose([
                     transforms.RandomCrop(32, padding=4),
                     transforms.RandomHorizontalFlip(),
@@ -172,7 +172,7 @@ def main():
             **dataloader_kwargs)
 
         test_loader = torch.utils.data.DataLoader(
-            datasets.CIFAR10(datadir, train=False, download=False, 
+            datasets.CIFAR10(datadir, train=False, download=False,
                 transform=transforms.Compose([
                     transforms.ToTensor(),
                     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
@@ -199,7 +199,7 @@ def main():
 
         test_loader = torch.utils.data.DataLoader(
             datasets.ImageFolder(
-                valdir, 
+                valdir,
                 transforms.Compose([
                     transforms.ToTensor(),
                     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
