@@ -65,8 +65,6 @@ def main():
     model = model_names[args.arch].cuda()
 
     cudnn.benchmark = True
-    device = torch.device("cuda")
-
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
 
@@ -162,15 +160,16 @@ def train_epoch(epoch, args, model, device, train_loader, optimizer, test_loader
         if i % log_inter == 0:
             percent = i / steps * 100
             throughput = data_trained / (time.time()-tick)
-
-            dev = torch.cuda.current_device()
-            stats = torch.cuda.memory_stats(device=dev)
-            max_mem = torch.cuda.get_device_properties(dev).total_memory
-            print('train | %d/%d epoch (%d%%) | %.3f samples/sec (estimated) | mem (GB): %.3f (%.3f) / %.3f'
-                '' % (epoch+1, epochs, percent, throughput,
-                      stats["allocated_bytes.all.peak"] / 10**9,
-                      stats["reserved_bytes.all.peak"] / 10**9,
-                      float(max_mem) / 10**9))
+            
+            if platform == "cuda":
+                dev = torch.cuda.current_device()
+                stats = torch.cuda.memory_stats(device=dev)
+                max_mem = torch.cuda.get_device_properties(dev).total_memory
+                print('train | %d/%d epoch (%d%%) | %.3f samples/sec (estimated) | mem (GB): %.3f (%.3f) / %.3f'
+                    '' % (epoch+1, epochs, percent, throughput,
+                        stats["allocated_bytes.all.peak"] / 10**9,
+                        stats["reserved_bytes.all.peak"] / 10**9,
+                        float(max_mem) / 10**9))
 
     platform == "cuda" and torch.cuda.synchronize(device)
     tock = time.time()

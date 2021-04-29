@@ -7,8 +7,7 @@ from __future__ import print_function
 import argparse
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-
+import torch.nn.functional as F 
 import os
 import torch.optim as optim
 from torchvision import datasets, transforms
@@ -41,10 +40,10 @@ def train(args, model, device, train_loader, test_loader):
     elapsed_times = []
     for epoch in range(0, epochs):
         throughput, elapsed_time = train_epoch(epoch, args, model, device, train_loader, optimizer, test_loader)
-
+        print("training")
         throughputs.append(throughput)
         elapsed_times.append(elapsed_time)
-
+    print("done")
     return throughputs, elapsed_times
 
 
@@ -72,8 +71,8 @@ def train_epoch(epoch, args, model, device, train_loader, optimizer, test_loader
             percent = i / steps * 100
             throughput = data_trained / (time.time()-tick)
 
-            dev = torch.cuda.current_device()
             if platform == "cuda":
+                dev = torch.cuda.current_device()
                 stats = torch.cuda.memory_stats(device=dev)
                 max_mem = torch.cuda.get_device_properties(dev).total_memory
                 print('train | %d/%d epoch (%d%%) | %.3f samples/sec (estimated) | mem (GB): %.3f (%.3f) / %.3f'
@@ -81,7 +80,7 @@ def train_epoch(epoch, args, model, device, train_loader, optimizer, test_loader
                         stats["allocated_bytes.all.peak"] / 10**9,
                         stats["reserved_bytes.all.peak"] / 10**9,
                         float(max_mem) / 10**9))
-
+    
     platform == "cuda" and torch.cuda.synchronize(device)
     tock = time.time()
 
@@ -208,7 +207,7 @@ def main():
             ),
             batch_size=batch_size, shuffle=True,
             num_workers=cores_gpu, pin_memory=True)
-
+    
     # Run the model
     throughputs, elapsed_times = train(args, model, device, train_loader, test_loader)
     _, valid_accuracy = test_epoch(model, device, test_loader)

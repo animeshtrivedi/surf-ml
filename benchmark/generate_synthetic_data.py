@@ -47,6 +47,10 @@ def generate(length, dimension, channels, subdir, classes):
 
 # Blueprint for each dataset
 def dataset(trainlength, testlength, dimension, channels, nrclasses, setname):
+    # If dir already exists just return
+    if os.path.exists(datadir + "/" + setname):
+        print("Data already exists")
+        return
     os.mkdir(datadir + "/" + setname)
     os.mkdir(datadir + "/" + setname + "/train")
     os.mkdir(datadir + "/" + setname + "/val")

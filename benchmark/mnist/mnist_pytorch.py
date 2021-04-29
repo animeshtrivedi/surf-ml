@@ -73,8 +73,8 @@ def train_epoch(epoch, args, model, device, train_loader, optimizer, test_loader
             percent = i / steps * 100
             throughput = data_trained / (time.time()-tick)
 
-            dev = torch.cuda.current_device()
             if platform == "cuda":
+                dev = torch.cuda.current_device()
                 stats = torch.cuda.memory_stats(device=dev)
                 max_mem = torch.cuda.get_device_properties(dev).total_memory
                 print('train | %d/%d epoch (%d%%) | %.3f samples/sec (estimated) | mem (GB): %.3f (%.3f) / %.3f'
