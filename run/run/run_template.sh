@@ -1,5 +1,4 @@
 #!/bin/bash
-set -x
 sbatch << EOT
 #!/bin/bash
 #SBATCH -J allperf
@@ -10,7 +9,10 @@ sbatch << EOT
 #SBATCH -c $5
 #SBATCH -o $8
 #SBATCH -e $8
-#; SBATCH --gres=gpu:$3
+if [ "$PLATFORM" = "cuda" ]; then 
+    #SBATCH --gres=gpu:$3
+    :
+fi
 
 ###################################################################################################
 # Option                        | Values                             | #SBATCH only | Export only |
@@ -77,6 +79,9 @@ case $1 in
     "cifar10")
         export DATADIR="$PROJECTDIR/benchmark/cifar10"
         ;;
+    "imagenet")
+        export DATADIR="$PROJECTDIR/benchmark/imagenet"
+        ;;
     *)
         export DATADIR="$PROJECTDIR/benchmark/mnist"
         ;;
@@ -102,21 +107,18 @@ mkdir -p .envs
 
 if contains "\$framework" "pytorch" || contains "\$framework" "horovod" || contains "\$framework" "gpipe"; then
     module purge
-#   module use ~/environment-modules-lisa
     module load 2020
     module load Python/3.8.2-GCCcore-9.3.0
 
-#    module unload GCC
- #   module unload GCCcore
-  #  module unload binutils
-   # module unload zlib
-    #module unload compilerwrappers
-
-#    module load NCCL/2.5.6-CUDA-10.1.243
- #   module load cuDNN/7.6.5.32-CUDA-10.1.243
-  #  module load OpenMPI/3.1.4-GCC-8.3.0
-#    module load libyaml/0.2.1-GCCcore-8.3.0
-
+    if [ "$PLATFORM" == "cuda" ]; then
+        module unload GCCcore/9.3.0
+        module unload binutils/2.34-GCCcore-9.3.0
+        module unload zlib/1.2.11-GCCcore-9.3.0
+        module load NCCL/2.7.8-gcccuda-2020a
+        module load cuDNN/8.0.3.33-gcccuda-2020a
+        module load libyaml/0.2.2-GCCcore-9.3.0 
+    fi
+    
     export MPICC=mpicc
     export MPICXX=mpicxx
 
@@ -125,8 +127,8 @@ if contains "\$framework" "pytorch" || contains "\$framework" "horovod" || conta
 
     pip3 install pyyaml
 
-    # We want cuda 10.1 torch / torchvision
-    pip3 install torch==1.5.0+cu101 torchvision==0.6.0+cu101 -f https://download.pytorch.org/whl/torch_stable.html
+    # We want cuda 11.1 torch / torchvision
+    pip3 install torch==1.8.1+cu111 torchvision==0.9.1+cu111 -f https://download.pytorch.org/whl/torch_stable.html
 
     # Install misc python packages
     cd $PROJECTDIR/run
