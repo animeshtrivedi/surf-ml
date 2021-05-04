@@ -3,3 +3,4 @@ __pycache__/
 benchmark/cifar10/cifar-10-batches-py/
 *.tar.gz
 benchmark/mnist/MNIST/
+benchmark/cifar10/CIFAR10/

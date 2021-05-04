@@ -1,5 +1,4 @@
 #!/bin/bash
-set -x
 benchmark="mnist"
 framework="pytorch"
 gpus=1
@@ -41,8 +40,12 @@ while getopts "b:f:g:n:p:m:q:t:sh" arg; do
         s) # Disable synthetic data generation, use real data (will take much longer)
             synthetic=false
             ;;
-        t) # Type of run (cpu or cuda)
-            PLATFORM=${OPTARG}
+        t) # Type of run (cpu or gpu), even if nr GPUs is specified device specified here will be used as torch device
+            if [ "${OPTARG}" == "gpu" ]; then
+                PLATFORM="cuda"
+            else
+                PLATFORM="cpu"
+            fi
             ;;
         h | *) # Display help.
             usage
@@ -104,8 +107,11 @@ echo -e "Log interval   $loginterval"   >> "$info"
 echo -e "Model name     $modelname"     >> "$info"
 echo -e "Queue          $queue"         >> "$info"
 echo -e "Use synthetic  $synthetic"     >> "$info"
-echo -e "Platform Type  $PLATFORM"      >> "$info"
-
+if [ "$PLATFORM" == "cuda" ]; then
+    echo -e "Platform Type  gpu"    >> "$info"
+else
+    echo -e "Platform Type  cpu"    >> "$info"
+fi
 # ---------------------------------------------------------------------------------------------------------------
 cd $PROJECTDIR/run/run
 
